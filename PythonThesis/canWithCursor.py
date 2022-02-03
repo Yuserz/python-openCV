@@ -9,13 +9,16 @@ def thresh_callback(val):
     threshold = val
     # Detect edges using Canny
     canny_output = cv.Canny(src_gray, threshold, threshold * 2)
+
     # Find contours
     contours, hierarchy = cv.findContours(canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+
     # Draw contours
     drawing = np.zeros((canny_output.shape[0], canny_output.shape[1], 3), dtype=np.uint8)
     for i in range(len(contours)):
         color = (rng.randint(0,256), rng.randint(0,256), rng.randint(0,256))
         cv.drawContours(drawing, contours, i, color, 2, cv.LINE_8, hierarchy, 0)
+
     # Show in a window
     cv.imshow('Contours', drawing)
 
@@ -27,9 +30,11 @@ src = cv.imread('image/bl.jpg')
 if src is None:
     print('Could not open or find the image:', args.input)
     exit(0)
+
 # Convert image to gray and blur it
 src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
-src_gray = cv.GaussianBlur(src_gray, (5,5),20)
+src_gray = cv.GaussianBlur(src_gray, (5,5),0)
+
 # Create Window
 source_window = 'Source'
 cv.namedWindow(source_window)
