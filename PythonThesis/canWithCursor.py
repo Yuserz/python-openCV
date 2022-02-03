@@ -33,7 +33,7 @@ if src is None:
 
 # Convert image to gray and blur it
 src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
-src_gray = cv.GaussianBlur(src_gray, (5,5),0)
+src_gray = cv.GaussianBlur(src_gray, (5,13),50,dst=None,sigmaY=50)
 
 # Create Window
 source_window = 'Source'

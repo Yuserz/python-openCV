@@ -34,17 +34,17 @@ gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 #Smoothing
 #kernel size is none negative & odd numbers only
-ks_width = 5
-ks_height = 11
+ks_width = 7
+ks_height = 15
 sigma_x = 50
-sigma_y = 50
+sigma_y = 40
 dst = None
 
 img_blur = cv.GaussianBlur(gray,(ks_width, ks_height),sigma_x,dst,sigma_y)
 # img_blur = cv.blur(gray,(0,0),0)#Smoothing
 
 # Canny(Finding Edge)
-canny = cv.Canny(img_blur,9,15,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
+canny = cv.Canny(img_blur,8,20,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
 
 
 # Finding Contour
@@ -88,6 +88,6 @@ cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
 
 # Show images
 images = [gray, img_blur, canny, img_contour]
-titles = ["Binary_img","Blurred_img", "Canny_edge", "Contours"]
+titles = ["Binary_img","Blurred_img", "Canny_edge", "Contour"]
 
 showImages(images, titles)
