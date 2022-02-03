@@ -73,11 +73,11 @@ for i in range(0, 3):
     max_index.append(index)
     cv.drawContours(img_contour, contours, index, (255, 0, 0), 3,)
 
-# # Get convex hull for max contours and draw them
-# cont = np.vstack(contours[i] for i in max_index)
-# hull = cv2.convexHull(cont)
-# unified.append(hull)
-# cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
+# Get convex hull for max contours and draw them
+cont = np.vstack(contours[i] for i in max_index)
+hull = cv.convexHull(cont)
+unified.append(hull)
+cv.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
 
 
 # cv2.imwrite('contours_none_image1.jpg', image_copy)
