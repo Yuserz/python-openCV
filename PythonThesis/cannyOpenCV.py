@@ -1,5 +1,4 @@
 import cv2 as cv
-import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -48,7 +47,7 @@ canny = cv.Canny(img_blur,8,20,L2gradient=True)# Noise Reduction, Finding Intens
 
 
 # Finding Contour
-contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+contours, hierarchy = cv.findContours(canny, cv.RETR_TREE,cv.CHAIN_APPROX_NONE)
 img_contour = np.copy(img)  # Contours change original image.
 # cv2.drawContours(img_contour, contours, -1, (0,255,0), 3) # Draw all - For visualization only
 
@@ -59,7 +58,7 @@ i = 0
 
 # Find perimeter for each contour i = id of contour
 for each_cnt in contours:
-    prm = cv2.arcLength(each_cnt, False)
+    prm = cv.arcLength(each_cnt, False)
     perimeter.append([prm, i])
     i += 1
 
@@ -72,13 +71,13 @@ max_index = []
 for i in range(0, 3):
     index = perimeter[i][1]
     max_index.append(index)
-    cv2.drawContours(img_contour, contours, index, (255, 0, 0), 3)
+    cv.drawContours(img_contour, contours, index, (255, 0, 0), 3,)
 
-# Get convex hull for max contours and draw them
-cont = np.vstack(contours[i] for i in max_index)
-hull = cv2.convexHull(cont)
-unified.append(hull)
-cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
+# # Get convex hull for max contours and draw them
+# cont = np.vstack(contours[i] for i in max_index)
+# hull = cv2.convexHull(cont)
+# unified.append(hull)
+# cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
 
 
 # cv2.imwrite('contours_none_image1.jpg', image_copy)
