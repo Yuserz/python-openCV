@@ -34,21 +34,22 @@ gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 #Smoothing
 #kernel size is none negative & odd numbers only
-ks = 7
-sigma_x = 40
-sigma_y = 40
+ks_width = 5
+ks_height = 11
+sigma_x = 50
+sigma_y = 50
 dst = None
 
-img_blur = cv.GaussianBlur(img,(ks, 11),sigma_x,dst,sigma_y)
+img_blur = cv.GaussianBlur(gray,(ks_width, ks_height),sigma_x,dst,sigma_y)
 # img_blur = cv.blur(gray,(0,0),0)#Smoothing
 
 # Canny(Finding Edge)
-canny = cv.Canny(img_blur,8,15,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
+canny = cv.Canny(img_blur,9,15,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
 
 
 # Finding Contour
-contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-img_contour = np.copy(img_blur)  # Contours change original image.
+contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+img_contour = np.copy(img)  # Contours change original image.
 # cv2.drawContours(img_contour, contours, -1, (0,255,0), 3) # Draw all - For visualization only
 
 # Contours -  maybe the largest perimeters pinpoint to the leaf?
@@ -86,7 +87,7 @@ cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
 
 
 # Show images
-images = [gray,img_blur, canny, img_contour]
+images = [gray, img_blur, canny, img_contour]
 titles = ["Binary_img","Blurred_img", "Canny_edge", "Contours"]
 
 showImages(images, titles)
