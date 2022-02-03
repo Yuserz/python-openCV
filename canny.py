@@ -1,4 +1,3 @@
-
 import numpy as np
 import cv2
 # import regiongrowth as rg
@@ -97,7 +96,7 @@ def largestContours(canny, img, img_gray):
     return img_contour, contours, perimeter, hull
 
 
-def grCut(chull, img):
+def grCut(chull, canny):
     # First create our rectangle that contains the object
     y_corners = np.amax(chull, axis=0)
     x_corners = np.amin(chull, axis=0)
@@ -128,12 +127,16 @@ def grCut(chull, img):
 Main loop  
 '''
 # PREPROCESSING
-img = cv2.imread('red.PNG')
+img = cv2.imread('1.PNG')
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 # thresh = threshold(img_gray) 	# Threshold the image
 filtered = filtering(img_gray, "bilateral")
-canny = cv2.Canny(filtered, 100, 200)
-canny_unfiltered = cv2.Canny(img_gray, 100, 200)
+
+low = 60
+high = 90
+# SK = 4
+canny = cv2.Canny(filtered, low, high )
+canny_unfiltered = cv2.Canny(img_gray, low, high)
 
 
 # SEGMENTATION

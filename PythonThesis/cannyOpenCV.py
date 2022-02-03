@@ -87,6 +87,6 @@ cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
 
 # Show images
 images = [gray,img_blur, canny, img_contour]
-titles = ["Bi_img","Blurred_img", "Canny_edge", "Contours"]
+titles = ["Binary_img","Blurred_img", "Canny_edge", "Contours"]
 
 showImages(images, titles)
