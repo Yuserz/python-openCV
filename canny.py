@@ -96,7 +96,7 @@ def largestContours(canny, img, img_gray):
     return img_contour, contours, perimeter, hull
 
 
-def grCut(chull, canny):
+def grCut(chull, img):
     # First create our rectangle that contains the object
     y_corners = np.amax(chull, axis=0)
     x_corners = np.amin(chull, axis=0)
@@ -135,7 +135,7 @@ filtered = filtering(img_gray, "bilateral")
 low = 60
 high = 90
 # SK = 4
-canny = cv2.Canny(filtered, low, high )
+canny = cv2.Canny(filtered, low, high)
 canny_unfiltered = cv2.Canny(img_gray, low, high)
 
 
@@ -145,6 +145,7 @@ img_contour, contours, perimeters, hull = largestContours(canny, img, img_gray)
 
 # Grabcut - Same bounding box than contours...
 img_grcut = grCut(hull, img)
+
 
 
 # Region grow method - Where to place the seeds, how do I stop growing?

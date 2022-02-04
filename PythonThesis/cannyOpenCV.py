@@ -18,7 +18,6 @@ def quick_sort(p):
     return quick_sort(high) + [pivot] + quick_sort(low)
 
 
-
 def showImages(imgs, titles):
     for i in range(0, 4):
         plt.subplot(141+i), plt.imshow(imgs[i], 'gray'), plt.title(titles[i])
@@ -26,29 +25,30 @@ def showImages(imgs, titles):
     plt.show()
 
 
-
-img = cv.imread('image/bl.jpg') #readimage
+img = cv.imread('image/bl.jpg')  # readimage
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
-#Smoothing
-#kernel size is none negative & odd numbers only
+# Smoothing
+# kernel size is none negative & odd numbers only
 ks_width = 7
 ks_height = 15
 sigma_x = 50
 sigma_y = 40
 dst = None
 
-img_blur = cv.GaussianBlur(gray,(ks_width, ks_height),sigma_x,dst,sigma_y)
+img_blur = cv.GaussianBlur(gray, (ks_width, ks_height), sigma_x, dst, sigma_y)
 # img_blur = cv.blur(gray,(0,0),0)#Smoothing
 
 # Canny(Finding Edge)
-canny = cv.Canny(img_blur,8,20,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
+# Noise Reduction, Finding Intensity Gradient of the Image,
+canny = cv.Canny(img_blur, 8, 20, L2gradient=True)
 
 
 # Finding Contour
-contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+contours, hierarchy = cv2.findContours(
+    canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 img_contour = np.copy(img)  # Contours change original image.
 # cv2.drawContours(img_contour, contours, -1, (0,255,0), 3) # Draw all - For visualization only
 
@@ -78,16 +78,15 @@ for i in range(0, 3):
 cont = np.vstack(contours[i] for i in max_index)
 hull = cv2.convexHull(cont)
 unified.append(hull)
-cv2.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
+cv2.drawContours(img_contour, unified, -1, (0, 0, 255), 3)
 
 
 # cv2.imwrite('contours_none_image1.jpg', image_copy)
 # cv2.destroyAllWindows()
 
 
-
 # Show images
 images = [gray, img_blur, canny, img_contour]
-titles = ["Binary_img","Blurred_img", "Canny_edge", "Contour"]
+titles = ["Binary_img", "Blurred_img", "Canny_edge", "Contour"]
 
 showImages(images, titles)
