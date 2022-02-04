@@ -25,8 +25,8 @@ def showImages(imgs, titles):
     plt.show()
 
 
-img = cv.imread('image/sample.jpg') #readimage
-# img = cv.imread('image/bl.jpg') #readimage
+# img = cv.imread('image/sample.jpg') #readimage
+img = cv.imread('image/bl.jpg') #readimage
 # img = cv.imread('image/q.PNG') #readimage
 
 # convert to grayscale
@@ -81,13 +81,15 @@ unified.append(hull)
 cv.drawContours(img_contour, unified, -1, (0, 0, 255), 3)
 
 
-# cv2.imwrite('contours_none_image1.jpg', image_copy)
-# cv2.destroyAllWindows()
-
 
 
 # Show images
 images = [gray, img_blur, canny, img_contour]
 titles = ["Binary_img","Blurred_img", "Canny_edge", "Contour"]
 
+
 showImages(images, titles)
+
+#Save Contour Image
+cv.imwrite('image/contoured/contours.png', img_contour)
+# cv2.destroyAllWindows()
