@@ -25,8 +25,9 @@ def showImages(imgs, titles):
     plt.show()
 
 
-
-img = cv.imread('image/bl.jpg') #readimage
+img = cv.imread('image/sample.jpg') #readimage
+# img = cv.imread('image/bl.jpg') #readimage
+# img = cv.imread('image/q.PNG') #readimage
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -34,16 +35,16 @@ gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 #Smoothing
 #kernel size is none negative & odd numbers only
 ks_width = 7
-ks_height = 15
-sigma_x = 50
-sigma_y = 40
+ks_height = 11
+sigma_x = 5
+sigma_y = 5
 dst = None
 
 img_blur = cv.GaussianBlur(gray,(ks_width, ks_height),sigma_x,dst,sigma_y)
 # img_blur = cv.blur(gray,(0,0),0)#Smoothing
 
 # Canny(Finding Edge)
-canny = cv.Canny(img_blur,8,20,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
+canny = cv.Canny(img_blur,8,30,L2gradient=True)# Noise Reduction, Finding Intensity Gradient of the Image,
 
 
 # Finding Contour
@@ -58,7 +59,7 @@ i = 0
 
 # Find perimeter for each contour i = id of contour
 for each_cnt in contours:
-    prm = cv.arcLength(each_cnt, False)
+    prm = cv.arcLength(each_cnt, True)
     perimeter.append([prm, i])
     i += 1
 
@@ -68,16 +69,16 @@ perimeter = quick_sort(perimeter)
 unified = []
 max_index = []
 # Draw max contours
-for i in range(0, 3):
+for i in range(8,30):
     index = perimeter[i][1]
     max_index.append(index)
-    cv.drawContours(img_contour, contours, index, (255, 0, 0), 3,)
+    cv.drawContours(img_contour, contours, index, (255, 0, 0), 3)
 
 # Get convex hull for max contours and draw them
 cont = np.vstack(contours[i] for i in max_index)
 hull = cv.convexHull(cont)
 unified.append(hull)
-cv.drawContours(img_contour, unified, -1,(0, 0, 255), 3)
+cv.drawContours(img_contour, unified, -1, (0, 0, 255), 3)
 
 
 # cv2.imwrite('contours_none_image1.jpg', image_copy)
