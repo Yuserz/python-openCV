@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import cv2 as cv
 import cv2
 import numpy as np
@@ -91,7 +90,7 @@ images = [gray, img_blur, canny, img_contour]
 titles = ["Binary_img", "Blurred_img", "Canny_edge", "Contour"]
 
 showImages(images, titles)
-=======
+
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
@@ -187,4 +186,3 @@ showImages(images, titles)
 #Save Contour Image
 cv.imwrite('image/contoured/contours.png', img_contour)
 # cv2.destroyAllWindows()
->>>>>>> 1d2830b854995266f2e3a0e512765b0a1323e330
