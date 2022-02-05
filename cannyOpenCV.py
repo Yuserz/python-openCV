@@ -29,10 +29,10 @@ def largestContours(canny, img):
     unified = []
     max_index = []
     # Draw max contours
-    for i in range(5, 20):
+    for i in range(0, 10):
         index = perimeter[i][1]
         max_index.append(index)
-        # cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
+        cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
 
     # Get convex hull for max contours and draw them
     cont = np.vstack(contours[i] for i in max_index)
@@ -127,26 +127,24 @@ def grCut(chull, img):
     return img
 
 
-
-
 # READ IMAGE
-img = cv.imread('image/v.PNG')
-# img = cv.imread('bl.jpg')
+img = cv.imread('image/test (6).jpg')
+# img = cv.imread('image/bl.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
-ks_width = 7
-ks_height = 11
-sigma_x = 5
-sigma_y = 5
+ks_width = 5
+ks_height = 5
+sigma_x = 20
+sigma_y = 20
 dst = None
 #SMOOTHING(Applying GaussianBlur)
 img_blur = cv.GaussianBlur(gray, (ks_width, ks_height), sigma_x, dst, sigma_y)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur, 8, 30, L2gradient=True)
+canny = cv.Canny(img_blur, 40, 70, L2gradient=True)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
