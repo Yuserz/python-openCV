@@ -1,16 +1,17 @@
 import cv2 as cv
 import cv2
 import numpy as np
+import glob
+import os
 from matplotlib import pyplot as plt
 
 
-def largestContours(canny, img):
 
+def largestContours(canny, img):
     # Finding Contour
-    contours, hierarchy = cv.findContours(
-        canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    contours, _ = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
     img_contour = np.copy(img)  # Contours change original image.
-    # cv2.drawContours(img_contour, contours, -1, (0,255,0), 3) # Draw all - For visualization only
+
 
     # Contours -  maybe the largest perimeters pinpoint to the leaf?
     perimeter = []
@@ -29,16 +30,16 @@ def largestContours(canny, img):
     unified = []
     max_index = []
     # Draw max contours
-    for i in range(0, 10):
+    for i in range(len(contours)):
         index = perimeter[i][1]
         max_index.append(index)
-        cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
+        # cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
 
     # Get convex hull for max contours and draw them
     cont = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(cont)
     unified.append(hull)
-    cv.drawContours(img_contour, unified, -1, (0,255, 0), 3)
+    cv.drawContours(img_contour, unified, -1, (0,255,0), 3)
 
     return img_contour, contours, perimeter, hull
 
@@ -100,7 +101,8 @@ def stackImages(imgArray, scale, lables=[]):
     return ver
 
 
-def grCut(chull, img):
+
+def grCut(chull, gCut):
     # First create our rectangle that contains the object
     y_corners = np.amax(chull, axis=0)
     x_corners = np.amin(chull, axis=0)
@@ -111,50 +113,56 @@ def grCut(chull, img):
     rect = (x_min, x_max, y_min, y_max)
 
     # Our mask
-    mask = np.zeros(img.shape[:2], np.uint8)
+    mask = np.zeros(gCut.shape[:2], np.uint8)
 
     # Values needed for algorithm
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
 
     # Grabcut
-    cv2.grabCut(img, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
 
     mask2 = np.where((mask == cv2.GC_PR_BGD) | (
         mask == cv2.GC_BGD), 0, 1).astype('uint8')
-    img = img*mask2[:, :, np.newaxis]
+    gCut = gCut*mask2[:, :, np.newaxis]
 
-    return img
+    return gCut
+
 
 
 # READ IMAGE
-img = cv.imread('image/test (6).jpg')
-# img = cv.imread('image/bl.jpg')
+# img = cv.imread('image/test (1).jpg')
+img = cv.imread('image/3.PNG')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
-ks_width = 5
-ks_height = 5
-sigma_x = 20
-sigma_y = 20
-dst = None
+ks = 5
+sigma= 5
 #SMOOTHING(Applying GaussianBlur)
-img_blur = cv.GaussianBlur(gray, (ks_width, ks_height), sigma_x, dst, sigma_y)
+img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur, 40, 70, L2gradient=True)
+canny = cv.Canny(img_blur, 30,70 , L2gradient=True)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
 img_contour, contours, perimeters, hull = largestContours(canny, img)
 
 #Cutting the contoured nail
-img_grcut = grCut(hull, img)
+gCut = img_contour
+img_grcut = grCut(hull, gCut)
 # cv2.imwrite('contours_none_image1.jpg', image_copy)
 # cv2.destroyAllWindows()
 
+#TRIAL----------------------------------------------------------------
+# # convert to grayscale
+# gray2 = cv.cvtColor(img_contour, cv.COLOR_RGB2GRAY)
+#
+# # CANNY(Finding Edge)
+# canny2 = cv.Canny(gray2, 45, 70)
+#----------------------------------------------------------------------
 
 imageArray = ([img, img_blur, canny, img_contour, img_grcut])
 imageStacked = stackImages(imageArray, 0.5)
