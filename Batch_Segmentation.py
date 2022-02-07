@@ -137,7 +137,7 @@ for i in imgList:
 for j in grayImg:
     # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
     #SMOOTHING(Applying GaussianBlur)
-    ks = 7
+    ks = 5
     sigma = 5
     blur = cv.GaussianBlur(j, (ks, ks), sigma)
     blurImg.append(blur)
@@ -146,7 +146,7 @@ for j in grayImg:
 #Process Canny
 for k in blurImg:
     # CANNY(Finding Edge)
-    canny = cv.Canny(k, 30, 70, L2gradient=True)
+    canny = cv.Canny(k, 45, 70, L2gradient=True)
     cannyEdge.append(canny)
 
 #Make a list of image

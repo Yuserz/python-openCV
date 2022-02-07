@@ -10,7 +10,7 @@ def saveImages(img):
     num = 1
 
     for i in img:
-        cv.imwrite('segmentedImg/' + str(num) + '.png', i)
+        cv.imwrite('segImg/' + str(num) + '.png', i)
         num += 1
 
 def readImg_onFolder(img, dir):
