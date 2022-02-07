@@ -59,7 +59,7 @@ def largestContours(canny, img_contour):
     cont = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(cont)
     unified.append(hull)
-    cv.drawContours(img_contour, unified, -1, (0,255,0), 3)
+    cv.drawContours(img_contour, unified, -1, (0,255,0), 2)
 
     return img_contour, contours, perimeter, hull
 
@@ -138,7 +138,7 @@ for j in grayImg:
     # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
     #SMOOTHING(Applying GaussianBlur)
     ks = 5
-    sigma = 5
+    sigma = 50
     blur = cv.GaussianBlur(j, (ks, ks), sigma)
     blurImg.append(blur)
 
@@ -146,7 +146,7 @@ for j in grayImg:
 #Process Canny
 for k in blurImg:
     # CANNY(Finding Edge)
-    canny = cv.Canny(k, 45, 70, L2gradient=True)
+    canny = cv.Canny(k, 10, 70, L2gradient=True)
     cannyEdge.append(canny)
 
 #Make a list of image

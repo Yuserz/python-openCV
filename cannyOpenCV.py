@@ -36,7 +36,7 @@ def largestContours(canny, img):
     cont = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(cont)
     unified.append(hull)
-    cv.drawContours(img_contour, unified, -1, (0,255,0), 3)
+    cv.drawContours(img_contour, unified, -1, (0,255,0), 2)
 
     return img_contour, contours, perimeter, hull
 
@@ -136,12 +136,12 @@ gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
 ks = 5
-sigma= 5
+sigma= 50
 #SMOOTHING(Applying GaussianBlur)
 img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur,30,70 , L2gradient=True)
+canny = cv.Canny(img_blur, 10 ,70 , L2gradient=True)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
