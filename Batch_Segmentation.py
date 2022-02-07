@@ -10,7 +10,7 @@ def saveImages(img):
     num = 1
 
     for i in img:
-        cv.imwrite('Contoured/' + str(num) + '.png', i)
+        cv.imwrite('segmentedImg/' + str(num) + '.png', i)
         num += 1
 
 def readImg_onFolder(img, dir):
@@ -137,7 +137,7 @@ for i in imgList:
 for j in grayImg:
     # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
     #SMOOTHING(Applying GaussianBlur)
-    ks = 5
+    ks = 7
     sigma = 5
     blur = cv.GaussianBlur(j, (ks, ks), sigma)
     blurImg.append(blur)
@@ -146,7 +146,7 @@ for j in grayImg:
 #Process Canny
 for k in blurImg:
     # CANNY(Finding Edge)
-    canny = cv.Canny(k, 45, 70, L2gradient=True)
+    canny = cv.Canny(k, 30, 70, L2gradient=True)
     cannyEdge.append(canny)
 
 #Make a list of image
@@ -165,7 +165,6 @@ for c, o in zip(cannyEdge, origImg):
 #GrabCut the contoured Nail
 for h, g in zip(convexHull, contourImg):
     #Cutting the contoured nail
-    # gCut = k
     img_grcut = grCut(h, g)
     gCut.append(img_grcut)
 
