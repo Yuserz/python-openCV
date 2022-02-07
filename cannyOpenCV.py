@@ -117,10 +117,10 @@ def grCut(chull, gCut):
     fgdModel = np.zeros((1, 65), np.float64)
 
     # Grabcut
-    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 20, cv2.GC_INIT_WITH_RECT)
 
     mask2 = np.where((mask == cv2.GC_PR_BGD) | (
-        mask == cv2.GC_BGD), 0, 1).astype('uint8')
+    mask == cv2.GC_BGD), 0, 1).astype('uint8')
     gCut = gCut*mask2[:, :, np.newaxis]
 
     return gCut
