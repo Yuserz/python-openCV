@@ -1,10 +1,7 @@
 import cv2 as cv
 import cv2
 import numpy as np
-import glob
-import os
 from matplotlib import pyplot as plt
-
 
 
 def largestContours(canny, img):
@@ -132,7 +129,7 @@ def grCut(chull, gCut):
 
 # READ IMAGE
 # img = cv.imread('image/test (1).jpg')
-img = cv.imread('image/3.PNG')
+img = cv.imread('image/1.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -144,7 +141,7 @@ sigma= 5
 img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur, 30,70 , L2gradient=True)
+canny = cv.Canny(img_blur,30,70 , L2gradient=True)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
@@ -153,16 +150,7 @@ img_contour, contours, perimeters, hull = largestContours(canny, img)
 #Cutting the contoured nail
 gCut = img_contour
 img_grcut = grCut(hull, gCut)
-# cv2.imwrite('contours_none_image1.jpg', image_copy)
-# cv2.destroyAllWindows()
 
-#TRIAL----------------------------------------------------------------
-# # convert to grayscale
-# gray2 = cv.cvtColor(img_contour, cv.COLOR_RGB2GRAY)
-#
-# # CANNY(Finding Edge)
-# canny2 = cv.Canny(gray2, 45, 70)
-#----------------------------------------------------------------------
 
 imageArray = ([img, img_blur, canny, img_contour, img_grcut])
 imageStacked = stackImages(imageArray, 0.5)
