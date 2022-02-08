@@ -2,6 +2,10 @@ import cv2 as cv
 import cv2
 import numpy as np
 import os
+import PIL
+from matplotlib import pyplot as plt
+
+
 
 
 def saveImages(img):
@@ -12,6 +16,7 @@ def saveImages(img):
     for i in img:
         cv.imwrite('segImg/' + str(num) + '.png', i)
         num += 1
+    print("Saved Successfully!")
 
 def readImg_onFolder(img, dir):
 
@@ -23,20 +28,21 @@ def readImg_onFolder(img, dir):
     #Read all image in the list
     for j in imgLoc:
         img2 = cv.imread(str(j))
-        # cv.resize(img2, (50, 50))  # Resize images
         img.append(img2)
 
     return img
 
 
-def largestContours(canny, img_contour):
+def largestContours(edge, img):
+
     # Finding Contour
-    contours, _ = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    contours, _ = cv.findContours(edge, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    # PIL module used to compy original image
+    img_contour = img.copy()
 
 
     # Contours -  maybe the largest perimeters pinpoint to the leaf?
     perimeter = []
-    max_perim = [0, 0]
     i = 0
 
     # Find perimeter for each contour i = id of contour
@@ -60,9 +66,9 @@ def largestContours(canny, img_contour):
     cont = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(cont)
     unified.append(hull)
-    cv.drawContours(img_contour, unified, -1, (0,255,0), 3)
+    cv.drawContours(img_contour, unified, -1, (0,255,0), 2)
 
-    return img_contour, contours, perimeter, hull
+    return img_contour, hull
 
 
 def quick_sort(p):
@@ -119,6 +125,7 @@ contourImg = []
 gCut = []
 convexHull = []
 
+
 #imagePath
 path = "image"
 
@@ -126,9 +133,15 @@ path = "image"
 dir_list = os.listdir(path)
 
 # READ IMAGE
-# img = cv.imread('image/test (1).jpg')
-# img = cv.imread('image/3.PNG')
 imgList = readImg_onFolder(imgList, dir_list)
+
+
+
+#make a list of original image
+for a in imgList:
+    origImg.append(a)
+
+
 
 #convert image to gray
 for i in imgList:
@@ -142,38 +155,36 @@ for j in grayImg:
     #SMOOTHING(Applying GaussianBlur)
     ks = 5
     sigma = 5
-    blur = cv.GaussianBlur(j, (ks, ks), sigma)
+    blur = cv.GaussianBlur(j, (ks, ks),sigmaX=sigma, sigmaY=sigma)
     blurImg.append(blur)
 
 
 #Process Canny
 for k in blurImg:
     # CANNY(Finding Edge)
-    canny = cv.Canny(k, 45, 70, L2gradient = True)
+    canny = cv.Canny(k, 5, 70, L2gradient=True)
     cannyEdge.append(canny)
-
-#Make a list of image
-for l in imgList:
-    origImg.append(l)
 
 
 #Find Contour(Find & Draw)
 for c, o in zip(cannyEdge, origImg):
     # FINDING CONTOUR
     # Largest Contour - Not the best segmentation
-    img_contour, contours, perimeters, hull = largestContours(c, o)
+    img_contour, hull = largestContours(c, o)
     contourImg.append(img_contour)
     convexHull.append(hull)
 
 #GrabCut the contoured Nail
-for h, g in zip(convexHull, contourImg):
+for h, g in zip(convexHull, origImg):
     #Cutting the contoured nail
-    # gCut = k
-    img_grcut = grCut(h, g)
-    gCut.append(img_grcut)
+    grbcut = grCut(h, g)
+    gCut.append(grbcut)
+
 
 #WriteFunction
 saveImages(gCut)
+# saveImages(origImg)
+# saveImages(cannyEdge)
 # saveImages(contourImg)
 # saveImages(cannyEdge)
 
