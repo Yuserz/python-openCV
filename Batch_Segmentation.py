@@ -2,6 +2,8 @@ import cv2 as cv
 import cv2
 import numpy as np
 import os
+import PIL
+from matplotlib import pyplot as plt
 
 
 def saveImages(img):
@@ -12,6 +14,7 @@ def saveImages(img):
     for i in img:
         cv.imwrite('segmentedImg/' + str(num) + '.png', i)
         num += 1
+    print("Saved Successfully!")
 
 def readImg_onFolder(img, dir):
 
@@ -28,9 +31,12 @@ def readImg_onFolder(img, dir):
     return img
 
 
-def largestContours(canny, img_contour):
+def largestContours(edge, img):
+
     # Finding Contour
-    contours, _ = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    contours, _ = cv.findContours(edge, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    # PIL module used to compy original image
+    img_contour = img.copy()
 
 
     # Contours -  maybe the largest perimeters pinpoint to the leaf?
@@ -118,6 +124,7 @@ contourImg = []
 gCut = []
 convexHull = []
 
+
 #imagePath
 path = "image"
 
@@ -126,6 +133,14 @@ dir_list = os.listdir(path)
 
 # READ IMAGE
 imgList = readImg_onFolder(imgList, dir_list)
+
+
+
+#make a list of original image
+for a in imgList:
+    origImg.append(a)
+
+
 
 #convert image to gray
 for i in imgList:
@@ -138,20 +153,16 @@ for j in grayImg:
     # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
     #SMOOTHING(Applying GaussianBlur)
     ks = 5
-    sigma = 50
-    blur = cv.GaussianBlur(j, (ks, ks), sigma)
+    sigma = 5
+    blur = cv.GaussianBlur(j, (ks, ks),sigmaX=sigma, sigmaY=sigma)
     blurImg.append(blur)
 
 
 #Process Canny
 for k in blurImg:
     # CANNY(Finding Edge)
-    canny = cv.Canny(k, 10, 70, L2gradient=True)
+    canny = cv.Canny(k, 5, 70, L2gradient=True)
     cannyEdge.append(canny)
-
-#Make a list of image
-for l in imgList:
-    origImg.append(l)
 
 
 #Find Contour(Find & Draw)
@@ -163,13 +174,16 @@ for c, o in zip(cannyEdge, origImg):
     convexHull.append(hull)
 
 #GrabCut the contoured Nail
-for h, g in zip(convexHull, contourImg):
+for h, g in zip(convexHull, origImg):
     #Cutting the contoured nail
-    img_grcut = grCut(h, g)
-    gCut.append(img_grcut)
+    grbcut = grCut(h, g)
+    gCut.append(grbcut)
+
 
 #WriteFunction
 saveImages(gCut)
+# saveImages(origImg)
+# saveImages(cannyEdge)
 # saveImages(contourImg)
 # saveImages(cannyEdge)
 
