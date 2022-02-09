@@ -38,7 +38,7 @@ def largestContours(edge, img):
     # Finding Contour
     contours, _ = cv.findContours(edge, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
     # PIL module used to compy original image
-    img_contour = img.copy()
+    orig_img = img.copy()
 
 
     # Contours -  maybe the largest perimeters pinpoint to the leaf?
@@ -60,15 +60,15 @@ def largestContours(edge, img):
     for i in range(len(contours)):
         index = perimeter[i][1]
         max_index.append(index)
-        # cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
+        # cv.drawContours(orig_img, contours, index, (0, 0, 255), 2)
 
     # Get convex hull for max contours and draw them
     cont = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(cont)
     unified.append(hull)
-    cv.drawContours(img_contour, unified, -1, (0,255,0), 2)
+    cv.drawContours(orig_img, unified, -1, (0,255,0), 2)
 
-    return img_contour, hull
+    return orig_img, hull
 
 
 def quick_sort(p):
@@ -86,7 +86,7 @@ def quick_sort(p):
 
 
 
-def grCut(chull, gCut):
+def grCut(chull, origImg):
     # First create our rectangle that contains the object
     y_corners = np.amax(chull, axis=0)
     x_corners = np.amin(chull, axis=0)
@@ -97,18 +97,18 @@ def grCut(chull, gCut):
     rect = (x_min, x_max, y_min, y_max)
 
     # Our mask
-    mask = np.zeros(gCut.shape[:2], np.uint8)
+    mask = np.zeros(origImg.shape[:2], np.uint8)
 
     # Values needed for algorithm
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
 
-    # Grabcut
-    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
 
-    mask2 = np.where((mask == cv2.GC_PR_BGD) | (
-        mask == cv2.GC_BGD), 0, 1).astype('uint8')
-    gCut = gCut*mask2[:, :, np.newaxis]
+    # Grabcut
+    cv2.grabCut(origImg, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+
+    mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD), 0, 1).astype('uint8')
+    gCut = origImg*mask2[:, :, np.newaxis]
 
     return gCut
 
