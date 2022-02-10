@@ -161,8 +161,24 @@ for contour in unified:
     #Draw a circle to indicate the contour
     cv.circle(img_contour,(cx,cy),10,(0,0,255), -1)
 
-plt.figure(figsize=[10,10])
-plt.imshow(img_contour[:,:,::-1]),plt.axis("off")
+    # solving Area
+    areaCon = M["m00"]
+
+    print("Area", areaCon)
+
+#Show image
+# plt.figure(figsize=[10,10])
+# plt.imshow(img_contour[:,:,::-1]),plt.axis("off")
+
+
+#
+# #solving Area
+# M = cv.moments(unified)
+#
+# print('Area', M["m00"])
+#
+# print("Area, Area")
+
 
 #Cutting the contoured nail
 gCut = img
