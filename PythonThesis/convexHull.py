@@ -16,7 +16,7 @@ def thresh_callback(val):
         hull = cv.convexHull(contours[i])
         hull_list.append(hull)
     # Draw contours + hull results
-    drawing = np.zeros((canny_output.shape[0], canny_output.shape[1], 3), dtype=np.uint8)
+    drawing = np.zeros((canny_output.shape[0], canny_output.shape[1], 3,), dtype=np.uint8)
     for i in range(len(contours)):
         color = (rng.randint(0,256), rng.randint(0,256), rng.randint(0,256))
         cv.drawContours(drawing, contours, i, color)
@@ -27,15 +27,15 @@ def thresh_callback(val):
 # Convert image to gray and blur it
 
 
-src = cv.imread('image/bl.jpg') #readimage
+src = cv.imread('image/1.jpg') #readimage
 
 # convert to grayscale
 gray = cv.cvtColor(src, cv.COLOR_RGB2GRAY)
 
 #Smoothing
 #kernel size is none negative & odd numbers only
-ks_width = 7
-ks_height = 13
+ks_width = 5
+ks_height = 5
 sigma_x = 5
 sigma_y = 5
 dst = None
@@ -48,8 +48,8 @@ src_gray = cv.GaussianBlur(gray,(ks_width, ks_height),sigma_x,dst,sigma_y)
 source_window = 'Source'
 cv.namedWindow(source_window)
 cv.imshow(source_window, src)
-max_thresh = 200
-thresh = 100 # initial threshold
+max_thresh = 70
+thresh = 30 # initial threshold
 cv.createTrackbar('Canny thresh:', source_window, thresh, max_thresh, thresh_callback)
 thresh_callback(thresh)
 cv.waitKey()

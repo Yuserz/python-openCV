@@ -3,58 +3,6 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-
-def largestContours(canny, img):
-    # Finding Contour
-    contours, _ = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-    img_contour = np.copy(img)  # Contours change original image.
-
-
-    # Contours -  maybe the largest perimeters pinpoint to the leaf?
-    perimeter = []
-    max_perim = [0, 0]
-    i = 0
-
-    # Find perimeter for each contour i = id of contour
-    for each_cnt in contours:
-        prm = cv.arcLength(each_cnt, True)
-        perimeter.append([prm, i])
-        i += 1
-
-    # Sort them
-    perimeter = quick_sort(perimeter)
-
-    unified = []
-    max_index = []
-    # Draw max contours
-    for i in range(len(contours)):
-        index = perimeter[i][1]
-        max_index.append(index)
-        # cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
-
-    # Get convex hull for max contours and draw them
-    cont = np.vstack(contours[i] for i in max_index)
-    hull = cv.convexHull(cont)
-    unified.append(hull)
-    cv.drawContours(img_contour, unified, -1, (0,255,0), 2)
-
-    return img_contour, contours, perimeter, hull, unified
-
-
-def quick_sort(p):
-    if len(p) <= 1:
-        return p
-
-    pivot = p.pop(0)
-    low, high = [], []
-    for entry in p:
-        if entry[0] > pivot[0]:
-            high.append(entry)
-        else:
-            low.append(entry)
-    return quick_sort(high) + [pivot] + quick_sort(low)
-
-
 def stackImages(imgArray, scale, lables=[]):
     rows = len(imgArray)
     cols = len(imgArray[0])
@@ -88,6 +36,7 @@ def stackImages(imgArray, scale, lables=[]):
     if len(lables) != 0:
         eachImgWidth = int(ver.shape[1] / cols)
         eachImgHeight = int(ver.shape[0] / rows)
+
         # print(eachImgHeight)
         for d in range(0, rows):
             for c in range(0, cols):
@@ -97,17 +46,81 @@ def stackImages(imgArray, scale, lables=[]):
                             d+20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 0, 255), 2)
     return ver
 
+def largestContours(canny, img):
+    # Finding Contour
+    cont = []
+    contours, _ = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    orig_img = np.copy(img)  # Contours change original image.
 
 
-def grCut(chull, gCut):
-    # First create our rectangle that contains the object
-    y_corners = np.amax(chull, axis=0)
-    x_corners = np.amin(chull, axis=0)
-    x_min = x_corners[0][1]
-    x_max = x_corners[0][1]
-    y_min = y_corners[0][1]
-    y_max = y_corners[0][1]
-    rect = (x_min, x_max, y_min, y_max)
+    # Contours -  maybe the largest perimeters pinpoint to the leaf?
+    perimeter = []
+    i = 0
+
+    # Find perimeter for each contour i = id of contour
+    for each_cnt in contours:
+        prm = cv.arcLength(each_cnt, True)
+        perimeter.append([prm, i])
+        i += 1
+
+    # Sort them
+    perimeter = quick_sort(perimeter)
+
+    unified = []
+    max_index = []
+    # Draw all contours
+    for i in range(len(perimeter)):
+        index = perimeter[i][1]
+        max_index.append(index)
+        cv.drawContours(orig_img, contours, index, (0, 0, 255), 2)
+
+    # print(len(contours))
+    # print(max_index)
+    # # print(index)
+    # Get convex hull for max contours and draw them
+    #Draw 1 max contour
+    # for max in max_index:
+    #     cont = np.vstack(contours[max])
+    #     break
+    # hull = cv.convexHull(cont)
+    # unified.append(hull)
+    # cv.drawContours(orig_img, unified, -1, (0,255,0), 2)
+    #
+    # return orig_img, contours, perimeter, hull, unified
+
+
+    # Get convex hull for max contours and draw them
+    # Get convex hull for max contours and draw them
+
+    conContour = np.vstack(contours[i] for i in max_index)
+    hull = cv.convexHull(conContour)
+    unified.append(hull)
+    cv.drawContours(orig_img, unified,-1, (0,255,0), 2)
+    boundingBoxes = [cv.boundingRect(c) for c in unified]
+    print("BoundingBox:", boundingBoxes)
+
+    return orig_img, contours, perimeter, hull, unified, boundingBoxes
+
+def quick_sort(p):
+    if len(p) <= 1:
+        return p
+
+    pivot = p.pop(0)
+    low, high = [], []
+    for entry in p:
+        if entry[0] > pivot[0]:
+            high.append(entry)
+        else:
+            low.append(entry)
+    return quick_sort(high) + [pivot] + quick_sort(low)
+
+def grCut(chull, gCut, bd):
+    #rectangle that contains the object
+    rect = []
+
+    #Rectangle will get the 4 index in the boundingBox of the contour
+    for boundingBox in bd:
+        rect = (boundingBox)
 
     # Our mask
     mask = np.zeros(gCut.shape[:2], np.uint8)
@@ -117,18 +130,16 @@ def grCut(chull, gCut):
     fgdModel = np.zeros((1, 65), np.float64)
 
     # Grabcut
-    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 20, cv2.GC_INIT_WITH_RECT)
+    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
 
-    mask2 = np.where((mask == cv2.GC_PR_BGD) | (
-    mask == cv2.GC_BGD), 0, 1).astype('uint8')
+    mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD), 0, 1).astype('uint8')
     gCut = gCut*mask2[:, :, np.newaxis]
 
     return gCut
 
-
-
+# ------------------------------------------START------------------------------------------------------
 # READ IMAGE
-# img = cv.imread('image/test (1).jpg')
+
 img = cv.imread('image/1.jpg')
 
 # convert to grayscale
@@ -141,14 +152,14 @@ sigma= 50
 img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur, 10 ,70 , L2gradient=True)
+canny = cv.Canny(img_blur, 10,70 , L2gradient=True)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
-img_contour, contours, perimeters, hull,unified = largestContours(canny, img)
+orig_img, contours, perimeters, hull, unified, boundingBoxes = largestContours(canny, img)
 
 
-#Contour Analysis
+#Contour Analysis -------------------------------------------------To be converted in method
 for contour in unified:
 
     #Get the image moment for contour
@@ -159,33 +170,28 @@ for contour in unified:
     cy = int(M['m01'] / M['m00'])
 
     #Draw a circle to indicate the contour
-    cv.circle(img_contour,(cx,cy),10,(0,0,255), -1)
+    cv.circle(orig_img, (cx, cy), 10, (255,0, 0), -1)
+
+
+    # # draw the countour number on the image
+    # cv.putText(orig_img, "#{}".format(contour + 1), (cx - 20, cy), cv.FONT_HERSHEY_SIMPLEX,
+    #            1.0, (255, 255, 255), 2)
 
     # solving Area
     areaCon = M["m00"]
 
-    print("Area", areaCon)
+    # print("Area", areaCon)
 
 #Show image
 # plt.figure(figsize=[10,10])
 # plt.imshow(img_contour[:,:,::-1]),plt.axis("off")
 
 
-#
-# #solving Area
-# M = cv.moments(unified)
-#
-# print('Area', M["m00"])
-#
-# print("Area, Area")
-
-
 #Cutting the contoured nail
-gCut = img
-img_grcut = grCut(hull, gCut)
+img_grcut = grCut(hull, img, boundingBoxes)
 
 
-imageArray = ([img, img_blur, canny, img_contour, img_grcut])
+imageArray = ([img, img_blur, canny, orig_img, img_grcut])
 imageStacked = stackImages(imageArray, 0.5)
 
 cv2.imshow("original", imageStacked)

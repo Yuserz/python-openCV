@@ -36,7 +36,7 @@ def readImg_onFolder(img, dir):
 def largestContours(edge, img):
 
     # Finding Contour
-    contours, hierarchy = cv.findContours(edge, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    contours, _ = cv.findContours(edge, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
     # PIL module used to compy original image
     orig_img = img.copy()
 
@@ -173,9 +173,6 @@ for c, o in zip(cannyEdge, origImg):
     img_contour, hull = largestContours(c, o)
     contourImg.append(img_contour)
     convexHull.append(hull)
-
-
-
 
 #GrabCut the contoured Nail
 for h, g in zip(convexHull, origImg):
