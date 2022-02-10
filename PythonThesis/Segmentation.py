@@ -1,59 +1,103 @@
-# import the necessary packages
-import bound as bound
-import numpy as np
-import imutils
+import cv2 as cv
 import cv2
-import os
+import numpy as np
+from matplotlib import pyplot as plt
 
 
-
-def saveImages(img):
-
-    # for naming contoured image
-    num = 1
-
-    for i in img:
-        cv2.imwrite('segImg/' + str(num) + '.png', i)
-        num += 1
-    print("Saved Successfully!")
-
-def readImg_onFolder(img, dir):
-
-    # READ IMAGE
-    #append the folder directory and filename in every loop and store to as list
-    for list in dir:
-        imgLoc.append('image/' + list)
-
-    #Read all image in the list
-    for j in imgLoc:
-        img2 = cv2.imread(str(j))
-        img.append(img2)
-
-    return img
+def largestContours(canny, img):
+    # Finding Contour
+    contours, _ = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    img_contour = np.copy(img)  # Contours change original image.
 
 
-def sort_contours(contours):
+    # Contours -  maybe the largest perimeters pinpoint to the leaf?
+    perimeter = []
+    max_perim = [0, 0]
     i = 0
-    boundingBoxes = [cv2.boundingRect(c) for c in contours]
-    (contours, boundingBoxes) = zip(*sorted(zip(contours, boundingBoxes),
-                                            key=lambda b:b[1][i]))
 
-    # return the list of sorted contours and bounding boxes
-    return (contours, boundingBoxes)
+    # Find perimeter for each contour i = id of contour
+    for each_cnt in contours:
+        prm = cv.arcLength(each_cnt, True)
+        perimeter.append([prm, i])
+        i += 1
 
-def draw_contour(image, c, i):
-    # compute the center of the contour area and draw a circle
-    # representing the center
-    M = cv2.moments(c)
-    cX = int(M["m10"] / M["m00"])
-    cY = int(M["m01"] / M["m00"])
+    # Sort them
+    perimeter = quick_sort(perimeter)
 
-    # draw the countour number on the image
-    cv2.putText(image, "#{}".format(i + 1), (cX - 20, cY), cv2.FONT_HERSHEY_SIMPLEX,
-        1.0, (255, 255, 225), 0)
+    unified = []
+    max_index = []
+    # Draw max contours
+    for i in range(len(contours)):
+        index = perimeter[i][1]
+        max_index.append(index)
+        # cv.drawContours(img_contour, contours, index, (0, 0, 255), 2)
 
-    # return the image with the contour number drawn on it
-    return image
+    # Get convex hull for max contours and draw them
+    cont = np.vstack(contours[i] for i in max_index)
+    hull = cv.convexHull(cont)
+    unified.append(hull)
+    cv.drawContours(img_contour, unified, -1, (0,255,0), 2)
+
+    return img_contour, contours, perimeter, hull, unified
+
+
+def quick_sort(p):
+    if len(p) <= 1:
+        return p
+
+    pivot = p.pop(0)
+    low, high = [], []
+    for entry in p:
+        if entry[0] > pivot[0]:
+            high.append(entry)
+        else:
+            low.append(entry)
+    return quick_sort(high) + [pivot] + quick_sort(low)
+
+
+def stackImages(imgArray, scale, lables=[]):
+    rows = len(imgArray)
+    cols = len(imgArray[0])
+    rowsAvailable = isinstance(imgArray[0], list)
+    width = imgArray[0][0].shape[1]
+    height = imgArray[0][0].shape[0]
+    if rowsAvailable:
+        for x in range(0, rows):
+            for y in range(0, cols):
+                imgArray[x][y] = cv2.resize(
+                    imgArray[x][y], (0, 0), None, scale, scale)
+                if len(imgArray[x][y].shape) == 2:
+                    imgArray[x][y] = cv2.cvtColor(
+                        imgArray[x][y], cv2.COLOR_GRAY2BGR)
+        imageBlank = np.zeros((height, width, 3), np.uint8)
+        hor = [imageBlank]*rows
+        hor_con = [imageBlank]*rows
+        for x in range(0, rows):
+            hor[x] = np.hstack(imgArray[x])
+            hor_con[x] = np.concatenate(imgArray[x])
+        ver = np.vstack(hor)
+        ver_con = np.concatenate(hor)
+    else:
+        for x in range(0, rows):
+            imgArray[x] = cv2.resize(imgArray[x], (0, 0), None, scale, scale)
+            if len(imgArray[x].shape) == 2:
+                imgArray[x] = cv2.cvtColor(imgArray[x], cv2.COLOR_GRAY2BGR)
+        hor = np.hstack(imgArray)
+        hor_con = np.concatenate(imgArray)
+        ver = hor
+    if len(lables) != 0:
+        eachImgWidth = int(ver.shape[1] / cols)
+        eachImgHeight = int(ver.shape[0] / rows)
+        # print(eachImgHeight)
+        for d in range(0, rows):
+            for c in range(0, cols):
+                cv2.rectangle(ver, (c*eachImgWidth, eachImgHeight*d), (c*eachImgWidth+len(
+                    lables[d][c])*13+27, 30+eachImgHeight*d), (255, 255, 255), cv2.FILLED)
+                cv2.putText(ver, lables[d][c], (eachImgWidth*c+10, eachImgHeight *
+                            d+20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 0, 255), 2)
+    return ver
+
+
 
 def grCut(chull, gCut):
     # First create our rectangle that contains the object
@@ -73,160 +117,60 @@ def grCut(chull, gCut):
     fgdModel = np.zeros((1, 65), np.float64)
 
     # Grabcut
-    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+    cv2.grabCut(gCut, mask, rect, bgdModel, fgdModel, 20, cv2.GC_INIT_WITH_RECT)
 
     mask2 = np.where((mask == cv2.GC_PR_BGD) | (
-        mask == cv2.GC_BGD), 0, 1).astype('uint8')
+    mask == cv2.GC_BGD), 0, 1).astype('uint8')
     gCut = gCut*mask2[:, :, np.newaxis]
 
     return gCut
 
 
-def quick_sort(p):
-    if len(p) <= 1:
-        return p
-
-    pivot = p.pop(0)
-    low, high = [], []
-    for entry in p:
-        if entry[0] > pivot[0]:
-            high.append(entry)
-        else:
-            low.append(entry)
-    return quick_sort(high) + [pivot] + quick_sort(low)
-
-def findContour(edge, img):
-    # find contours in the accumulated image, keeping only the largest
-    # ones
-    contours = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = imutils.grab_contours(contours)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
-
-    orig = img.copy()
-
-    # # loop over the (unsorted) contours and draw them
-    # for (i, c) in enumerate(contours):
-    #     orig = draw_contour(orig, c, i)
-
-    # show the original, unsorted contour image
-    # cv2.imshow("Unsorted", orig)
-
-    # sort the contours according to the provided method
-    (contours, boundingBoxes) = sort_contours(contours)
-
-    # loop over the (now sorted) contours and draw them
-    for (i, c) in enumerate(contours):
-        draw_contour(img, c, i)
-
-    # Contours -  maybe the largest perimeters pinpoint to the leaf?
-    perimeter = []
-    i = 0
-
-    # Find perimeter for each contour i = id of contour
-    for each_cnt in contours:
-        prm = cv2.arcLength(each_cnt, True)
-        perimeter.append([prm, i])
-        i += 1
-
-    # Sort them
-    perimeter = quick_sort(perimeter)
-
-    unified = []
-    max_index = []
-    # Draw max contours
-    for i in range(len(contours)):
-        index = perimeter[i][1]
-        max_index.append(index)
-        # cv2.drawContours(orig, contours, index, (0, 0, 255), 2)
-
-    # Get convex hull for max contours and draw them
-    cont = np.vstack(contours[i] for i in max_index)
-    hull = cv2.convexHull(cont)
-    cv2.drawContours(orig, unified, -1, (255, 0, 0), 3)
-
-    return orig, hull, boundingBoxes
-
-
-# -----------------------------------------START---------------------------------------------------
-#Variables
-
-imgLoc = []
-imgList = []
-origImg = []
-grayImg = []
-blurImg = []
-cannyEdge = []
-contourImg = []
-gCut = []
-convexHull = []
-
-
-#imagePath
-path = "image"
-
-#array of image list
-dir_list = os.listdir(path)
 
 # READ IMAGE
-imgList = readImg_onFolder(imgList, dir_list)
+# img = cv.imread('image/test (1).jpg')
+img = cv.imread('image/1.jpg')
+
+# convert to grayscale
+gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+
+# {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
+ks = 5
+sigma= 50
+#SMOOTHING(Applying GaussianBlur)
+img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
+
+# CANNY(Finding Edge)
+canny = cv.Canny(img_blur, 10 ,70 , L2gradient=True)
+
+# FINDING CONTOUR
+# Largest Contour - Not the best segmentation
+img_contour, contours, perimeters, hull,unified = largestContours(canny, img)
 
 
+#Contour Analysis
+for contour in unified:
 
-#make a list of original image
-for a in imgList:
-    origImg.append(a)
+    #Get the image moment for contour
+    M = cv.moments(contour)
 
+    #Calculate the centroid
+    cx = int(M['m10'] / M['m00'])
+    cy = int(M['m01'] / M['m00'])
 
+    #Draw a circle to indicate the contour
+    cv.circle(img_contour,(cx,cy),10,(0,0,255), -1)
 
-#convert image to gray
-for i in imgList:
-    # convert to grayscale
-    gray = cv2.cvtColor(i, cv2.COLOR_RGB2GRAY)
-    grayImg.append(gray)
+plt.figure(figsize=[10,10])
+plt.imshow(img_contour[:,:,::-1]),plt.axis("off")
 
-#Blur image
-for j in grayImg:
-    # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
-    #SMOOTHING(Applying GaussianBlur)
-    ks = 5
-    sigma = 5
-    blur = cv2.GaussianBlur(j, (ks, ks),sigmaX=sigma, sigmaY=sigma)
-    blurImg.append(blur)
+#Cutting the contoured nail
+gCut = img
+img_grcut = grCut(hull, gCut)
 
 
-#Process Canny
-for k in blurImg:
-    # CANNY(Finding Edge)
-    canny = cv2.Canny(k, 5, 70, L2gradient=True)
-    cannyEdge.append(canny)
+imageArray = ([img, img_blur, canny, img_contour, img_grcut])
+imageStacked = stackImages(imageArray, 0.5)
 
-
-bound = []
-#Find Contour(Find & Draw)
-for c, o in zip(cannyEdge, origImg):
-    # FINDING CONTOUR
-    # Largest Contour - Not the best segmentation
-    contours, hull, boundingBoxes = findContour(c, o)
-    contourImg.append(contours)
-    convexHull.append(hull)
-    bound.append(boundingBoxes)
-
-
-#GrabCut the contoured Nail
-for h, g in zip(convexHull, origImg):
-    #Cutting the contoured nail
-    grbcut = grCut(h, g)
-    gCut.append(grbcut)
-
-
-for con in convexHull:
-    # print(bound)
-    print(convexHull)
-
-
-#WriteFunction
-# saveImages(gCut)
-# saveImages(origImg)
-# saveImages(cannyEdge)
-saveImages(contourImg)
-# saveImages(cannyEdge)
+cv2.imshow("original", imageStacked)
+cv2.waitKey(0)

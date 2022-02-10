@@ -95,7 +95,6 @@ img3 = FindContour(edge, img)
 c = 0
 i = 0
 
-
 contour = draw_contour(img3, c, i)
 
 
