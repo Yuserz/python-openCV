@@ -54,7 +54,7 @@ def largestContours(edge, img):
     # Sort them
     perimeter = quick_sort(perimeter)
 
-    unified = []
+    unifiedContour = []
     max_index = []
     # Draw max contours
     for i in range(len(contours)):
@@ -65,10 +65,13 @@ def largestContours(edge, img):
     # Get convex hull for max contours and draw them
     cont = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(cont)
-    unified.append(hull)
-    cv.drawContours(orig_img, unified, -1, (0,255,0), 2)
+    unifiedContour.append(hull)
+    cv.drawContours(orig_img, unifiedContour, -1, (0,255,0), 2)
+    boundingBoxes = [cv.boundingRect(c) for c in unifiedContour]
+    print("BoundingBox:", boundingBoxes)
 
-    return orig_img, hull
+    return orig_img, contours, perimeter, hull, unifiedContour, boundingBoxes
+
 
 
 def quick_sort(p):
@@ -86,31 +89,29 @@ def quick_sort(p):
 
 
 
-def grCut(chull, origImg):
-    # First create our rectangle that contains the object
-    y_corners = np.amax(chull, axis=0)
-    x_corners = np.amin(chull, axis=0)
-    x_min = x_corners[0][1]
-    x_max = x_corners[0][1]
-    y_min = y_corners[0][1]
-    y_max = y_corners[0][1]
-    rect = (x_min, x_max, y_min, y_max)
+def grCut(bd, img):
+    #rectangle that contains the object
+    rect = []
+
+    #Rectangle will get the 4 index in the boundingBox of the contour
+    for boundingBox in bd:
+        rect = (boundingBox)
+
 
     # Our mask
-    mask = np.zeros(origImg.shape[:2], np.uint8)
+    mask = np.zeros(img.shape[:2], np.uint8)
 
     # Values needed for algorithm
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
 
-
     # Grabcut
-    cv2.grabCut(origImg, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+    cv2.grabCut(img, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
 
     mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD), 0, 1).astype('uint8')
-    gCut = origImg*mask2[:, :, np.newaxis]
+    img = img * mask2[:, :, np.newaxis]
 
-    return gCut
+    return img
 
 # -----------------------------------------START---------------------------------------------------
 #Variables
@@ -124,7 +125,7 @@ cannyEdge = []
 contourImg = []
 gCut = []
 convexHull = []
-
+boundingBoxes= []
 
 #imagePath
 path = "image"
@@ -170,12 +171,13 @@ for k in blurImg:
 for c, o in zip(cannyEdge, origImg):
     # FINDING CONTOUR
     # Largest Contour - Not the best segmentation
-    img_contour, hull = largestContours(c, o)
-    contourImg.append(img_contour)
+    orig_img, contours, perimeter, hull, unifiedContour, boundingBoxes = largestContours(c, o)
+    contourImg.append(orig_img)
     convexHull.append(hull)
+    # Box.append(boundingBoxes)
 
 #GrabCut the contoured Nail
-for h, g in zip(convexHull, origImg):
+for h, g in zip(boundingBoxes, origImg):
     #Cutting the contoured nail
     grbcut = grCut(h, g)
     gCut.append(grbcut)
