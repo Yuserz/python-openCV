@@ -99,7 +99,7 @@ def quick_sort(p):
             low.append(entry)
     return quick_sort(high) + [pivot] + quick_sort(low)
 
-def grCut(con,image, bd):
+def grCut(image, bd):
     #rectangle that contains the object
 
     #Rectangle will get the 4 index in the boundingBox of the contour
@@ -111,7 +111,7 @@ def grCut(con,image, bd):
     coordinates = np.array_split(rect, 2)
     # print(coordinates)
 
-    len(coordinates)
+    # len(coordinates)
 
     #store to point variable
     pt1 = ()
@@ -129,22 +129,22 @@ def grCut(con,image, bd):
 
     #Create 2 mask
     #Rectangular mask
-    rec = np.zeros(con.shape[:2], dtype="uint8")
+    rec = np.zeros(image.shape[:2], dtype="uint8")
     cv2.rectangle(rec,(pt1), (pt2), 255, -1)
     # cv2.imshow("Rectangular Mask", rec)
 
     # circle mask
-    circle = np.zeros(con.shape[:2], dtype="uint8")
-    cv2.circle(circle, (cx, cy), int(radius), 255, -1)
+    circle = np.zeros(image.shape[:2], dtype="uint8")
+    cv2.circle(circle, (cx, cy), int(radius) - 10, 255, -1) # subtracted 10 to original radius to eliminate excess pixels
     # cv2.imshow("Circle mask", circle)
 
     #combined using bitwise_and operator
     mask = cv2.bitwise_and(rec, circle)
-    cv2.imshow("mask", mask)
+    # cv2.imshow("mask", mask)
 
     # apply our mask -- notice how only the person in the image is
     # cropped out
-    masked = cv2.bitwise_and(con, con, mask=mask)
+    masked = cv2.bitwise_and(image, image, mask=mask)
     cv2.imshow("Mask Applied to Image", masked)
 
 
@@ -163,11 +163,38 @@ def grCut(con,image, bd):
 
     return img
 
+def contourAnalysis(unified):
+    # Contour Analysis
+    for contour in unified:
+        # Get the image moment for contour
+        M = cv.moments(contour)
+
+        # Calculate the centroid
+        cx = int(M['m10'] / M['m00'])
+        cy = int(M['m01'] / M['m00'])
+
+        # Draw a circle to indicate the contour
+        cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
+
+        # solving Area
+        areaCon = M["m00"]
+
+        print("Area", areaCon)
+
+        # Solving the radius using area
+        pi = 3.14159
+        area = areaCon
+
+        radius = math.sqrt(area / pi)
+
+        print(radius)
+
+        return M, cx, cy, area, radius
 
 # ------------------------------------------START------------------------------------------------------
 # READ IMAGE
 
-img = cv.imread('image/6.jpg')
+img = cv.imread('image/4.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -179,38 +206,15 @@ sigma= 50
 img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur, 10,70 , L2gradient=True)
+canny = cv.Canny(img_blur, 30,70 , L2gradient=True)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
 contoured_img, contours, perimeters, hull, unified, boundingBoxes = largestContours(canny, img)
 
+#Contour Analysis
+M, cx, cy, area, radius = contourAnalysis(unified)
 
-#Contour Analysis -------------------------------------------------To be converted in method
-for contour in unified:
-
-    #Get the image moment for contour
-    M = cv.moments(contour)
-
-    #Calculate the centroid
-    cx = int(M['m10'] / M['m00'])
-    cy = int(M['m01'] / M['m00'])
-
-    #Draw a circle to indicate the contour
-    cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
-
-    # solving Area
-    areaCon = M["m00"]
-
-    print("Area", areaCon)
-
-    #Solving the radius using area
-    pi = 3.14159
-    area = areaCon
-
-    radius = math.sqrt(area/pi)
-
-    print(radius)
 
 #Show image
 # plt.figure(figsize=[10,10])
@@ -218,7 +222,7 @@ for contour in unified:
 
 
 #Cutting the contoured nail
-img_grcut = grCut(contoured_img, img, boundingBoxes)
+img_grcut = grCut(img, boundingBoxes)
 
 
 imageArray = ([img, img_blur, canny, contoured_img, img_grcut])
