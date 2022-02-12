@@ -195,7 +195,7 @@ def contourAnalysis(unified):
 # ------------------------------------------START------------------------------------------------------
 # READ IMAGE
 
-img = cv.imread('image/1.jpg')
+img = cv.imread('image/4.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 import math
+import glob
 import PIL
 from matplotlib import pyplot as plt
 
@@ -12,23 +13,24 @@ def saveImages(img):
     num = 1
 
     for i in img:
-        cv.imwrite('segImg/' + str(num) + '.png', i)
+        cv.imwrite('segImg/' + str(num) + '.jpg', i, (cv.IMWRITE_JPEG_QUALITY, 100))
         num += 1
+
     print("Saved Successfully!")
-
-def readImg_onFolder(img, dir):
-
-    # READ IMAGE
-    #append the folder directory and filename in every loop and store to as list
-    for list in dir:
-        imgLoc.append('image/' + list)
-
-    #Read all image in the list
-    for j in imgLoc:
-        img2 = cv.imread(str(j))
-        img.append(img2)
-
-    return img
+#
+# def readImg_onFolder(imgList, images):
+#
+#     # # READ IMAGE
+#     # #append the folder directory and filename in every loop and store to as list
+#     # for list in imgList:
+#     #     imgLoc.append('image/' + list)
+#     #
+#     # #Read all image in the list
+#     for list in imgList:
+#         img = [cv2.imread(img) for img in list ]
+#         images.append(img)
+#
+#         return images
 
 
 def largestContours(canny, img):
@@ -89,7 +91,9 @@ def grCut(image, bd, cx, cy, Radius):
     #Rectangle will get the 4 index in the boundingBox of the contour
     global rect
     for boundingBox in bd:
-        rect = (boundingBox)
+        rect = boundingBox
+    #ADD 1 TO RECT ARRAY TO PREVENT ERROR WHEN HEIGHT OR WIDTH IS ZERO
+    rect = tuple(np.array(rect)+1)
 
     #split the Perimeter of boundingBox
     coordinates = np.array_split(rect, 2)
@@ -98,8 +102,8 @@ def grCut(image, bd, cx, cy, Radius):
     # len(coordinates)
 
     #store to point variable
-    pt1 = []
-    pt2 = []
+    global pt1
+    global pt2
     n = 0
     for c in coordinates:
         if n == 0:
@@ -108,11 +112,16 @@ def grCut(image, bd, cx, cy, Radius):
         else:
             pt2 = c
 
-    print(pt1,pt2)
+    # print(pt1,pt2)
+    # pt = "0,0"
+
+    for p in pt1:
+        if p == 0:
+            pt1 = pt1 + 1
 
     #Create 2 mask
     #Rectangular mask
-    rec = np.zeros(image.shape[:2], dtype="uint8")
+    rec = np.zeros(image.shape[:2], np.uint8)
     cv2.rectangle(rec,(pt1), (pt2), 255, -1)
     # cv2.imshow("Rectangular Mask", rec)
 
@@ -126,9 +135,9 @@ def grCut(image, bd, cx, cy, Radius):
     mask = cv2.bitwise_and(rec, circle)
     # cv2.imshow("mask", mask)
 
-    # apply our mask -- notice how only the person in the image is
+    # apply our mask
     # cropped out
-    masked = cv2.bitwise_and(image, image, mask=mask)
+    masked = cv2.bitwise_and(image, image, mask)
     # cv2.imshow("Mask Applied to Image", masked)
 
 
@@ -142,7 +151,7 @@ def grCut(image, bd, cx, cy, Radius):
     # Grabcut
     cv2.grabCut(image, masked, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
 
-    mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD), 0, 1).astype('uint8')
+    mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD),0,1).astype('uint8')
     img = image*mask2[:, : , np.newaxis]
 
     return img
@@ -156,33 +165,36 @@ def contourAnalysis(uni):
         # Get the image moment for contour
         M = cv.moments(contour)
 
-        # Calculate the centroid
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+        else:
+            # set values as what you need in the situation
+            cX, cY = 0, 0
 
 
-        # Draw a circle to indicate the contour center
-        cv.circle(contoured_img, (cX, cY), 5, (255, 0, 0), -1)
+    # Draw a circle to indicate the contour center
+    cv.circle(contoured_img, (cX, cY), 5, (255, 0, 0), -1)
 
-        # solving Area
-        areaCon = int(M["m00"])
+    # solving Area
+    areaCon = int(M["m00"])
 
-        print("\nArea", areaCon)
+    print("\nArea", areaCon)
 
-        # Solving the radius using area value
-        pi = 3.14159
-        area = areaCon
+    # Solving the radius using area value
+    pi = 3.14159
+    area = areaCon
 
-        radius = int(math.sqrt(area / pi))
+    radius = math.sqrt(area / pi)
 
-        print("Radius", radius)
+    print("Radius", radius)
 
-        return M, cX, cY, area, radius
+    return M, cX, cY, area, radius
 
 # -----------------------------------------START---------------------------------------------------
 #Variables
 
-imgLoc = []
+# images = []
 imgList = []
 origImg = []
 grayImg = []
@@ -197,21 +209,29 @@ cx = []
 cy = []
 Radius = []
 
-#imagePath
-path = "image"
 
-#array of image list
-dir_list = os.listdir(path)
+#img folder Directory
+imdir = 'image/'
+ext = ['png', 'jpg']    # Add image formats here
 
-# READ IMAGE
-imgList = readImg_onFolder(imgList, dir_list)
+#Locate image and extend
+files = []
+[files.extend(glob.glob(imdir + '*.' + e)) for e in ext]
+
+#Read image
+images = [cv2.imread(file) for file in files]
+
+# #array of image list
+# dir_list = os.listdir(imdir)
+
 
 #make a list of original image
-for a in imgList:
+for a in images:
     origImg.append(a)
 
+
 #convert image to gray
-for i in imgList:
+for i in origImg:
     # convert to grayscale
     gray = cv.cvtColor(i, cv.COLOR_RGB2GRAY)
     grayImg.append(gray)
@@ -258,6 +278,7 @@ for h, g, x , y , r in zip(origImg, bBox, cx, cy ,Radius):
 
 #WriteFunction
 saveImages(gCut)
+cv2.waitKey(0)
 # saveImages(origImg)
 # saveImages(cannyEdge)
 # saveImages(contourImg)
