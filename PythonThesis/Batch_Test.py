@@ -1,11 +1,8 @@
 import cv2 as cv
 import cv2
 import numpy as np
-import os
 import math
 import glob
-import PIL
-from matplotlib import pyplot as plt
 
 
 def saveImages(img):
@@ -17,7 +14,6 @@ def saveImages(img):
         num += 1
 
     print("Saved Successfully!")
-
 
 def largestContours(canny, img):
     # Finding Contour
@@ -78,14 +74,12 @@ def grCut(image, bd, cx, cy, Radius):
     global rect
     for boundingBox in bd:
         rect = boundingBox
+
     #ADD 1 TO RECT ARRAY TO PREVENT ERROR WHEN HEIGHT OR WIDTH IS ZERO
     rect = tuple(np.array(rect)+1)
 
     #split the Perimeter of boundingBox
     coordinates = np.array_split(rect, 2)
-    # print(coordinates)
-
-    # len(coordinates)
 
     #store to point variable
     global pt1
@@ -97,13 +91,6 @@ def grCut(image, bd, cx, cy, Radius):
             n +=1
         else:
             pt2 = c
-
-    # print(pt1,pt2)
-    # pt = "0,0"
-
-    for p in pt1:
-        if p == 0:
-            pt1 = pt1 + 1
 
     #Create 2 mask
     #Rectangular mask
@@ -126,9 +113,6 @@ def grCut(image, bd, cx, cy, Radius):
     masked = cv2.bitwise_and(image, image, mask)
     # cv2.imshow("Mask Applied to Image", masked)
 
-
-    # # # Our mask
-    # mask = np.zeros(gCut.shape[:2], np.uint8)
 
     # Values needed for algorithm
     bgdModel = np.zeros((1, 65), np.float64)
@@ -211,7 +195,6 @@ images = [cv2.imread(file) for file in files]
 for a in images:
     origImg.append(a)
 
-
 #convert image to gray
 for i in origImg:
     # convert to grayscale
@@ -236,7 +219,6 @@ for k in blurImg:
 #Find Contour(Find & Draw)
 for c, o in zip(cannyEdge, origImg):
     # FINDING CONTOUR
-    # Largest Contour - Not the best segmentation
     contoured_img, contours, perimeters, hull, unified, boundingBoxes = largestContours(c, o)
     contourImg.append(contoured_img)
     convexHull.append(hull)
