@@ -114,8 +114,8 @@ def grCut(image, bd):
     # len(coordinates)
 
     #store to point variable
-    pt1 = ()
-    pt2 =  ()
+    pt1 = []
+    pt2 = []
     n = 0
     for c in coordinates:
         if n == 0:
@@ -124,7 +124,7 @@ def grCut(image, bd):
         else:
             pt2 = c
 
-    print(pt1,pt2)
+    # print(pt1,pt2)
 
 
     #Create 2 mask
@@ -165,6 +165,7 @@ def grCut(image, bd):
 
 def contourAnalysis(unified):
     # Contour Analysis
+    global cx, cy
     for contour in unified:
         # Get the image moment for contour
         M = cv.moments(contour)
@@ -173,28 +174,28 @@ def contourAnalysis(unified):
         cx = int(M['m10'] / M['m00'])
         cy = int(M['m01'] / M['m00'])
 
-        # Draw a circle to indicate the contour
-        cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
+    # Draw a circle to indicate the contour
+    cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
 
-        # solving Area
-        areaCon = M["m00"]
+    # solving Area
+    areaCon = M["m00"]
 
-        print("Area", areaCon)
+    print("Area", areaCon)
 
-        # Solving the radius using area
-        pi = 3.14159
-        area = areaCon
+    # Solving the radius using area
+    pi = 3.14159
+    area = areaCon
 
-        radius = math.sqrt(area / pi)
+    radius = math.sqrt(area / pi)
 
-        print(radius)
+    print(radius)
 
-        return M, cx, cy, area, radius
+    return M, cx, cy, area, radius
 
 # ------------------------------------------START------------------------------------------------------
 # READ IMAGE
 
-img = cv.imread('image/4.jpg')
+img = cv.imread('image/1.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
