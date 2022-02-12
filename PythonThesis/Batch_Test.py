@@ -17,20 +17,6 @@ def saveImages(img):
         num += 1
 
     print("Saved Successfully!")
-#
-# def readImg_onFolder(imgList, images):
-#
-#     # # READ IMAGE
-#     # #append the folder directory and filename in every loop and store to as list
-#     # for list in imgList:
-#     #     imgLoc.append('image/' + list)
-#     #
-#     # #Read all image in the list
-#     for list in imgList:
-#         img = [cv2.imread(img) for img in list ]
-#         images.append(img)
-#
-#         return images
 
 
 def largestContours(canny, img):
@@ -212,7 +198,7 @@ Radius = []
 
 #img folder Directory
 imdir = 'image/'
-ext = ['png', 'jpg']    # Add image formats here
+ext = ['png', 'jpg'] # Add image formats here
 
 #Locate image and extend
 files = []
@@ -220,10 +206,6 @@ files = []
 
 #Read image
 images = [cv2.imread(file) for file in files]
-
-# #array of image list
-# dir_list = os.listdir(imdir)
-
 
 #make a list of original image
 for a in images:
