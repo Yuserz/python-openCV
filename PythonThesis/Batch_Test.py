@@ -50,7 +50,7 @@ def largestContours(canny, img):
 
     #Boundingbox will be the final perimmeter of the image
     boundingBoxes = [cv.boundingRect(c) for c in unified]
-    print("BoundingBox:", boundingBoxes)
+    # print("BoundingBox:", boundingBoxes)
 
     return contoured_img, contours, perimeter, hull, unified, boundingBoxes
 
