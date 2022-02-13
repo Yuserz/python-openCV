@@ -78,7 +78,7 @@ def saveImages(img):
 
 
 #read
-img = cv.imread('image/1.jpg')
+img = cv.imread('../../image/1.jpg')
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 #blur

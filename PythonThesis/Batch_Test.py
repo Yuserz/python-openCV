@@ -164,9 +164,7 @@ def contourAnalysis(uni):
 # -----------------------------------------START---------------------------------------------------
 #Variables
 
-# images = []
-imgList = []
-origImg = []
+origImgList = []
 grayImg = []
 blurImg = []
 cannyEdge = []
@@ -179,10 +177,9 @@ cx = []
 cy = []
 Radius = []
 
-
 #img folder Directory
 imdir = 'image/'
-ext = ['png', 'jpg'] # Add image formats here
+ext = ['png', 'jpg', 'bmp', 'tif'] # Add image formats here
 
 #Locate image and extend
 files = []
@@ -193,10 +190,10 @@ images = [cv2.imread(file) for file in files]
 
 #make a list of original image
 for a in images:
-    origImg.append(a)
+    origImgList.append(a)
 
 #convert image to gray
-for i in origImg:
+for i in origImgList:
     # convert to grayscale
     gray = cv.cvtColor(i, cv.COLOR_RGB2GRAY)
     grayImg.append(gray)
@@ -217,7 +214,7 @@ for k in blurImg:
     cannyEdge.append(canny)
 
 #Find Contour(Find & Draw)
-for c, o in zip(cannyEdge, origImg):
+for c, o in zip(cannyEdge, origImgList):
     # FINDING CONTOUR
     contoured_img, contours, perimeters, hull, unified, boundingBoxes = largestContours(c, o)
     contourImg.append(contoured_img)
@@ -235,7 +232,7 @@ for u in uni:
 
 
 #GrabCut the contoured Nail
-for h, g, x , y , r in zip(origImg, bBox, cx, cy ,Radius):
+for h, g, x , y , r in zip(origImgList, bBox, cx, cy , Radius):
     #Cutting the contoured nail
     img = grCut(h, g, x , y ,r)
     gCut.append(img)

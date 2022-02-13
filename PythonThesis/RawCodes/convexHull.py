@@ -27,7 +27,7 @@ def thresh_callback(val):
 # Convert image to gray and blur it
 
 
-src = cv.imread('image/1.jpg') #readimage
+src = cv.imread('../../image/1.jpg') #readimage
 
 # convert to grayscale
 gray = cv.cvtColor(src, cv.COLOR_RGB2GRAY)

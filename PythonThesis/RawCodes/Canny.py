@@ -22,23 +22,32 @@ def readImg_onFolder(img, dir):
     #Read all image in the list
     for j in imgLoc:
         img2 = cv.imread(str(j))
-        cv.resize(img2, (50, 50))  # Resize images
         img.append(img2)
 
     return img
 
 #imagePath
-path = "image"
+path = "../../image"
 
 #array of image list
 dir_list = os.listdir(path)
 
 imgLoc = []
 img = []
+img3 = []
 
 #ReadFunction
-readImg_onFolder(img, dir_list)
+img = readImg_onFolder(img, dir_list)
+
+
+for i in img:
+    img = cv.Canny(i,100,150)
+    img3.append(img)
+
 
 #WriteFunction
-saveImages(img)
+saveImages(img3)
 
+
+# plt.subplot(111),plt.imshow(img,cmap = 'gray')
+# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
