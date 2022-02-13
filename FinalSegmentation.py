@@ -194,8 +194,7 @@ def contourAnalysis(unified):
 
 # ------------------------------------------START------------------------------------------------------
 # READ IMAGE
-
-img = cv.imread('image/bali.tif')
+img = cv.imread('image/1.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -216,16 +215,10 @@ contoured_img, contours, perimeters, hull, unified, boundingBoxes = largestConto
 #Contour Analysis
 M, cx, cy, area, radius = contourAnalysis(unified)
 
-
-#Show image
-# plt.figure(figsize=[10,10])
-# plt.imshow(img_contour[:,:,::-1]),plt.axis("off")
-
-
 #Cutting the contoured nail
 img_grcut = grCut(img, boundingBoxes)
 
-
+#Show Images
 imageArray = ([img, img_blur, canny, contoured_img, img_grcut])
 imageStacked = stackImages(imageArray, 0.5)
 
