@@ -74,8 +74,12 @@ def largestContours(canny, img):
         perimeter.append([prm, i])
         i += 1
 
-    # Sort perimeter and return 1 array with 4 index only
-    perimeter = quick_sort(perimeter)
+    # #Approximate Contour
+    # for cnt in contours:
+    #     epsilon = 0.1 * cv.arcLength(cnt, True)
+    #     approx = cv.approxPolyDP(cnt, epsilon, True)
+    # # print(approx)
+
 
     unified = []
     max_index = []
@@ -85,7 +89,7 @@ def largestContours(canny, img):
         max_index.append(index)
         # cv.drawContours(contoured_img, contours, index, (0, 0, 255), 2)
 
-    # Get convexhull for max contours and draw them
+    # apply convexhull function to get the hull value then draw
     conContour = np.vstack(contours[i] for i in max_index)
     hull = cv.convexHull(conContour)
     unified.append(hull)
@@ -99,20 +103,8 @@ def largestContours(canny, img):
 
     return contoured_img, contours, perimeter, hull, unified, boundingBoxes
 
-def quick_sort(p):
-    if len(p) <= 1:
-        return p
 
-    pivot = p.pop(0)
-    low, high = [], []
-    for entry in p:
-        if entry[0] > pivot[0]:
-            high.append(entry)
-        else:
-            low.append(entry)
-    return quick_sort(high) + [pivot] + quick_sort(low)
-
-def grCut(image, bd):
+def masking(image, bd):
     #rectangle that contains the object
 
     #Rectangle will get the 4 index in the boundingBox of the contour
@@ -121,30 +113,43 @@ def grCut(image, bd):
     for boundingBox in bd:
         rect = (boundingBox)
 
+
     #Create 2 mask
+
     #Rectangular mask
-    global mask
-    mask= np.zeros(image.shape[:2], dtype="uint8")
-    cv2.rectangle(mask,rect, 255, -1)
+    rec= np.zeros(image.shape[:2], dtype="uint8")
+    cv2.rectangle(rec,rect, 255, -1)
     # cv2.imshow("Rectangular Mask", mask)
 
+    #  circle mask
+    circle = np.zeros(image.shape[:2], dtype="uint8")
+    cv2.circle(circle, (cx, cy), int(radius) - 10, 255, -1) # subtracted 10 to original radius to eliminate excess pixels
+    # cv2.imshow("Circle mask", circle)
+
+    # combined using bitwise_and operator
+    mask = cv2.bitwise_and(rec, circle)
+    # cv2.imshow("mask", mask)
+    # cropped out
+    masked = cv2.bitwise_and(image, image, mask=mask)
 
     # Getting ROI(region of interest)
     # up1,down3,left0,right2
     global roi
     roi = image[rect[1]: rect[1] + rect[3], rect[0]:rect[2]]
 
-    # Values needed for algorithm
-    bgdModel = np.zeros((0), np.float64)
-    fgdModel = np.zeros((1, 65), np.float64)
+    return masked
 
-    # Grabcut
-    cv2.grabCut(image, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
-
-    mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD), 0, 1).astype('uint8')
-    img_grcut = image*mask2[:, :, np.newaxis]
-
-    return  img_grcut
+    #grabcut
+    # bgdModel = np.zeros((0), np.float64)
+    # fgdModel = np.zeros((1, 65), np.float64)
+    #
+    # # Grabcut
+    # cv2.grabCut(image, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+    #
+    # mask2 = np.where((mask == cv2.GC_PR_BGD) | (mask == cv2.GC_BGD), 0, 1).astype('uint8')
+    # img_grcut = image*mask2[:, :, np.newaxis]
+    #
+    # return  img_grcut
 
 def contourAnalysis(unified):
     # Contour Analysis
@@ -184,15 +189,21 @@ img = cv.imread('image/5.jpg')
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 # {GAUSSIANBLUR VALUE} kernel size is none negative & odd numbers only
-# ks = 5
-sigma= 50
+ks = 5
+sigma= 5
 #SMOOTHING(Applying GaussianBlur)
-img_blur = cv.GaussianBlur(gray, (5, 7), sigma)
+img_blur = cv.GaussianBlur(gray, (ks, ks), sigma)
 
+# sobel filter
+x = cv2.Sobel(img_blur,cv2.CV_64F, 1,0, ksize=3, scale=1)
+y = cv2.Sobel(img_blur,cv2.CV_64F, 1,1, ksize=3, scale=1)
+absx= cv2.convertScaleAbs(x)
+absy = cv2.convertScaleAbs(y)
+edge = cv2.addWeighted(absx, 0.5, absy, 0.5,0)
+cv2.imshow('edge', edge)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(img_blur, 10, 20 , L2gradient=False)
-
+canny = cv.Canny(edge, 100,150 , L2gradient= False)
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
@@ -201,14 +212,15 @@ contoured_img, contours, perimeters, hull, unified, boundingBoxes = largestConto
 #Contour Analysis
 M, cx, cy, area, radius = contourAnalysis(unified)
 
-#Cutting the contoured nail
-img_grcut= grCut(img, boundingBoxes)
+#masking
+masked = masking(img, boundingBoxes)
 
-imageArray = ([img, gray, img_blur, canny, contoured_img,img_grcut])
+imageArray = ([img, img_blur, canny, contoured_img,masked])
+# imageArray = ([img, img_blur, canny, contoured_img, masked, roi])
 imageStacked = stackImages(imageArray, 0.5)
 
 cv2.imshow("original", imageStacked)
-#
+
 # cv2.imshow("Roi", roi)
 
 cv2.waitKey(0)
