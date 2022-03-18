@@ -6,7 +6,7 @@ import cv2
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", type=str, default="image/1.jpg",
+ap.add_argument("-i", "--image", type=str, default="../image/1.jpg",
 	help="path to the input image")
 args = vars(ap.parse_args())
 
@@ -19,13 +19,13 @@ cv2.imshow("Original", image)
 # ignored in the original image while mask pixels with a value of
 # 255 (foreground) are allowed to be kept
 rec = np.zeros(image.shape[:2], dtype="uint8")
-cv2.rectangle(rec, (10, 10), (160, 145), 255, -1)
+cv2.rectangle(rec, (5, 10), (160, 145), 255, -1)
 cv2.imshow("Rectangular Mask", rec)
 
 # draw a circle
 circle = np.zeros(image.shape[:2], dtype="uint8")
 cv2.circle(circle,( 85, 77), 70, 255, -1)
-cv2.imshow("Circle mask", circle)
+# cv2.imshow("Circle mask", circle)
 
 mask = cv2.bitwise_and(rec, circle)
 cv2.imshow("mask", mask)
