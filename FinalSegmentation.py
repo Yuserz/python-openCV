@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import math
 
-
 def saveImages(img):
     # for naming contoured image
     num = 1
@@ -103,7 +102,6 @@ def largestContours(canny, img):
 
     return contoured_img, contours, perimeter, hull, unified, boundingBoxes
 
-
 def masking(image, bd):
     #rectangle that contains the object
 
@@ -112,7 +110,6 @@ def masking(image, bd):
 
     for boundingBox in bd:
         rect = (boundingBox)
-
 
     #Create 2 mask
 
@@ -135,7 +132,7 @@ def masking(image, bd):
     # Getting ROI(region of interest)
     # up1,down3,left0,right2
     global roi
-    roi = image[rect[1]: rect[1] + rect[3], rect[0]:rect[2]]
+    roi = image[rect[1]: rect[1] + rect[3], rect[0]:rect[2]+rect[0]]
 
     return masked
 
@@ -180,10 +177,10 @@ def contourAnalysis(unified):
 
     return M, cx, cy, area, radius
 
-# ------------------------------------------START------------------------------------------------------
+# ------------------------------------------START-----------------------------------------------------
 # READ IMAGE
 
-img = cv.imread('image/5.jpg')
+img = cv.imread('image/4.jpg')
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -221,8 +218,6 @@ imageStacked = stackImages(imageArray, 0.5)
 
 cv2.imshow("original", imageStacked)
 
-# cv2.imshow("Roi", roi)
+cv2.imshow("Roi", roi)
 
 cv2.waitKey(0)
-
-

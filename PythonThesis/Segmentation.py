@@ -59,35 +59,37 @@ def stackImages(imgArray, scale, lables=[]):
 
 def largestContours(canny, img):
     # Finding Contour
-    global approx, unified
-    global hierarchy
+    global approx, unified, rect
+    global hierarchy, contours
     contours, hierarchy = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     contoured_img = np.copy(img)  # Contours change original image.
 
-    # Get all perimeter
-    perimeter = []
+
+    # Get all coordinates
+    coordinates = []
     i = 0
 
-    # Find perimeter for each contour i = id of contour
+    # Find coordinates for each contour i = id of contour
     for each_cnt in contours:
         prm = cv.arcLength(each_cnt, True)
-        perimeter.append([prm, i])
+        coordinates.append([prm, i])
         i += 1
 
-    # #Approximate Contour
-    # for cnt in contours:
-    #     epsilon = 0.1 * cv.arcLength(cnt, True)
-    #     approx = cv.approxPolyDP(cnt, epsilon, True)
-    # # print(approx)
+    global approx
+    #Approximate Contour
+    for cnt in contours:
+        epsilon = 0.01 * cv.arcLength(cnt, True)
+        approx = cv.approxPolyDP(cnt, epsilon, True)
+    print("approx",approx)
 
 
     unified = []
     max_index = []
     # Draw all contours
     for i in range(len(contours)):
-        index = perimeter[i][1]
+        index = coordinates[i][1]
         max_index.append(index)
-        # cv.drawContours(contoured_img, contours, index, (0, 0, 255), 2)
+        cv.drawContours(contoured_img, contours, index, (0, 0, 255), 2)
 
     # apply convexhull function to get the hull value then draw
     conContour = np.vstack(contours[i] for i in max_index)
@@ -95,13 +97,31 @@ def largestContours(canny, img):
     unified.append(hull)
     cv.drawContours(contoured_img, unified,-1, (0,255,0), 2)
 
-    print("hull",perimeter)
+    # print("hull",coordinates)
 
     #Boundingbox will be the final perimmeter of the image
-    boundingBoxes = [cv.boundingRect(c) for c in unified]
+    boundingBoxes = [cv.boundingRect(uni) for uni in unified]
     print("BoundingBox:", boundingBoxes)
 
-    return contoured_img, contours, perimeter, hull, unified, boundingBoxes
+
+    for boundingBox in boundingBoxes:
+        rect = boundingBox
+
+    # Getting ROI(region of interest)
+    # up1,down3,left0,right2
+    # x,y,w,h
+    global conLength
+    global conWidth
+
+    conLength = rect[0] + rect[2]
+    conWidth= rect[1] + rect[3]
+
+    global roi
+    roi = img[rect[1]: conWidth, rect[0]:conLength]
+    print(roi)
+
+
+    return contoured_img, approx, coordinates, hull, unified, boundingBoxes,contours
 
 
 def grCut(image, bd):
@@ -117,13 +137,14 @@ def grCut(image, bd):
     #Create 2 mask
 
     #Rectangular mask
+    global  rec
     rec= np.zeros(image.shape[:2], dtype="uint8")
     cv2.rectangle(rec,rect, 255, -1)
-    # cv2.imshow("Rectangular Mask", mask)
+    # cv2.imshow("Rectangular Mask", rec)
 
     #  circle mask
     circle = np.zeros(image.shape[:2], dtype="uint8")
-    cv2.circle(circle, (cx, cy), int(radius) - 10, 255, -1) # subtracted 10 to original radius to eliminate excess pixels
+    cv2.circle(circle, (cx, cy), int(radius) , 255, -1) # subtracted 10 to original radius to eliminate excess pixels
     # cv2.imshow("Circle mask", circle)
 
     # combined using bitwise_and operator
@@ -132,10 +153,10 @@ def grCut(image, bd):
     # cropped out
     masked = cv2.bitwise_and(image, image, mask=mask)
 
-    # Getting ROI(region of interest)
-    # up1,down3,left0,right2
-    global roi
-    roi = image[rect[1]: rect[1] + rect[3], rect[0]:rect[2]]
+    # # Getting ROI(region of interest)
+    # # up1,down3,left0,right2
+    # global roi
+    # roi = image[rect[1]: rect[1] + rect[3], rect[0]:rect[2]]
 
     return masked
 
@@ -166,24 +187,52 @@ def contourAnalysis(unified):
     cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
 
     # solving Area
-    areaCon = M["m00"]
-
-    print("Area", areaCon)
+    conArea = M["m00"]
 
     # Solving the radius using area
     pi = 3.14159
-    area = areaCon
+    area = conArea
 
     radius = math.sqrt(area / pi)
 
-    print(radius)
 
-    return M, cx, cy, area, radius
+    # solve for perimeters p = l * w
+    perimeter = 2*(conLength + conWidth)
+
+    # Solving "Circularity or Roundness"
+    Roundness = (4 * area * pi)/(perimeter * 2)
+
+    # Solving Compactness
+    compactness = (conLength*2)/conArea
+
+    print("Perimeter",perimeter)
+    print("Roundness",Roundness)
+    print("Radius",radius)
+    print("Area", conArea)
+    print("Compactness", compactness)
+
+    return M, cx, cy, area, radius, perimeter,Roundness, compactness
+
 
 # ------------------------------------------START------------------------------------------------------
 # READ IMAGE
 
-img = cv.imread('image/y.PNG')
+img = cv.imread('image/5.jpg')
+
+rgb_planes = cv2.split(img)
+
+result_planes = []
+result_norm_planes = []
+for plane in rgb_planes:
+    dilated_img = cv2.dilate(plane, np.ones((7,7), np.uint8))
+    bg_img = cv2.medianBlur(dilated_img, 21)
+    diff_img = 255 - cv2.absdiff(plane, bg_img)
+    norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+    result_planes.append(diff_img)
+    result_norm_planes.append(norm_img)
+
+result = cv2.merge(result_planes)
+result_norm = cv2.merge(result_norm_planes)
 
 # convert to grayscale
 gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -203,19 +252,22 @@ edge = cv2.addWeighted(absx, 0.5, absy, 0.5,0)
 cv2.imshow('edge', edge)
 
 # CANNY(Finding Edge)
-canny = cv.Canny(edge, 100,150 , L2gradient= False)
+canny = cv.Canny(edge, 50,150 , L2gradient= True)
 
 
 # FINDING CONTOUR
 # Largest Contour - Not the best segmentation
-contoured_img, contours, perimeters, hull, unified, boundingBoxes = largestContours(canny, img)
+contoured_img, approx, coordinates, hull, unified, boundingBoxes,contours = largestContours(canny, img)
 
 #Contour Analysis
-M, cx, cy, area, radius = contourAnalysis(unified)
-
+M, cx, cy, area, radius, conLength, perimeter, Roundness = contourAnalysis(unified)
 
 #masking
 masked = grCut(img, boundingBoxes)
+
+# canny = cv.Canny(masked, 5,100 , L2gradient= True)
+
+# contoured_img, approx, perimeters, hull, unified, boundingBoxes = largestContours(canny, img)
 
 imageArray = ([img, img_blur, canny, contoured_img,masked])
 # imageArray = ([img, img_blur, canny, contoured_img, masked, roi])
@@ -224,7 +276,7 @@ imageStacked = stackImages(imageArray, 0.5)
 
 cv2.imshow("original", imageStacked)
 
-# cv2.imshow("Roi", roi)
+cv2.imshow("Roi", roi)
 
 cv2.waitKey(0)
 
