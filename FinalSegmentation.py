@@ -89,7 +89,7 @@ def largestContours(canny, img):
     for i in range(len(contours)):
         index = coordinates[i][1]
         max_index.append(index)
-        cv.drawContours(contoured_img, contours, index, (0, 0, 255), 2)
+        # cv.drawContours(contoured_img, contours, index, (0, 0, 255), 2)
 
     # apply convexhull function to get the hull value then draw
     conContour = np.vstack(contours[i] for i in max_index)
@@ -184,7 +184,7 @@ def contourAnalysis(unified):
         cy = int(M['m01'] / M['m00'])
 
     # Draw a circle to indicate the contour
-    cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
+    # cv.circle(contoured_img, (cx, cy), 5, (255, 0, 0), -1)
 
     # solving Area
     conArea = M["m00"]
@@ -264,10 +264,6 @@ M, cx, cy, area, radius, conLength, perimeter, Roundness = contourAnalysis(unifi
 
 #masking
 masked = grCut(img, boundingBoxes)
-
-# canny = cv.Canny(masked, 5,100 , L2gradient= True)
-
-# contoured_img, approx, perimeters, hull, unified, boundingBoxes = largestContours(canny, img)
 
 imageArray = ([img, img_blur, canny, contoured_img,masked])
 # imageArray = ([img, img_blur, canny, contoured_img, masked, roi])
